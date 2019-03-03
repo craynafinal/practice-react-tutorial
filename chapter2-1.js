@@ -10,21 +10,62 @@ const Card = (props) => {
   );
 };
 
-let data = [
-	{ name: "Paul O’Shannessy",
-  	avatar_url: "https://avatars1.githubusercontent.com/u/8445?v=4",
-    company: "Facebook" },
-  { name: "Blake Mizerany",
-  	avatar_url: "https://avatars2.githubusercontent.com/u/46?v=4",
-    company: "null" }
-];
-
 const CardList = (props) => {
 	return (
   	<div>
-    	{props.cards.map(card => <Card {...card} />)}
+    	{props.cards.map(card => <Card key={card.id} {...card} />)}
     </div>
   );
 };
 
-ReactDOM.render(<CardList cards={data} />, mountNode);
+class Form extends React.Component {
+	state = { userName: '' }
+	handleSubmit = (event) => {
+  	event.preventDefault();
+    console.log('Event: Form Submit', this.state.userName);
+    //console.log('Event: Form Submit', this.userNameInput.value);
+    //can use native fetch method or axios
+    //axios: library for ajax request
+    axios.get(`https://api.github.com/users/${this.state.userName}`)
+    	.then(resp => {
+      	this.props.onSubmit(resp.data);
+        this.setState({ userName: '' });
+      });
+  };
+  
+	render() {
+  	return (
+    	<form onSubmit={this.handleSubmit}>
+      	<input type="text"
+        	value={this.state.userName}
+          onChange={(event) => this.setState({ userName: event.target.value })}
+        	//ref={(input) => this.userNameInput = input}
+        	placeholder="Github username" required />
+        <button type="submit">Add card</button>
+      </form>
+    )
+  };
+}
+
+class App extends React.Component {
+	state = {
+  	cards: []
+  };
+  
+  addNewCard = (cardInfo) => {
+  	this.setState(prevState => ({
+    	cards: prevState.cards.concat(cardInfo)
+    }))
+  }
+  
+	render() {
+  	return (
+    	<div>
+        <Form onSubmit={this.addNewCard} />
+        <CardList cards={this.state.cards} />
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<App />, mountNode);
